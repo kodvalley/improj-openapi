@@ -42,7 +42,8 @@ rules:
       field: "@key"
       function: pattern
       functionOptions:
-        match: '^(/([a-z0-9]+(-[a-z0-9]+)*|{[a-z][a-z0-9_]*}|[a-z]+.json))+$'
+        # \x2F is "/": Spectral reads a pattern that starts with "/" as /regex/flags.
+        match: '^(\x2F([a-z0-9]+(-[a-z0-9]+)*|\{[a-z][a-z0-9_]*\}|[a-z]+\.json))+$'
 
   improj-required-scope:
     description: Every authenticated operation names exactly one scope (x-required-scope).
