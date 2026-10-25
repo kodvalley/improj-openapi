@@ -1,0 +1,54 @@
+# Publishes a GitHub release of the description when a maintainer pushes a
+# tag named after the API version, for example v2026.10.24. The publish job
+# runs in the protected "release" environment (configure required reviewers in
+# Settings > Environments).
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm audit --audit-level=low
+      - run: npm test
+      - name: The tag matches the API version in the description
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="$(node -p 'require("./openapi/openapi.json").info.version.replaceAll("-", ".")')"
+          test "v${version}" = "${TAG}" || { echo "Tag ${TAG} does not match info.version (v${version})"; exit 1; }
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Create the GitHub release with checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          cp openapi/openapi.json "improj-openapi-${TAG}.json"
+          sha256sum "improj-openapi-${TAG}.json" > SHA256SUMS
+          gh release create "${TAG}" "improj-openapi-${TAG}.json" SHA256SUMS --title "IMPROJ API ${TAG}" --notes "See CHANGELOG.md for the changes in this version." --verify-tag

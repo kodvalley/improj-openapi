@@ -1,0 +1,142 @@
+# IMPROJ API ruleset. The built-in "spectral:oas" rules are pinned through the
+# exact @stoplight/spectral-cli version in package-lock.json; the improj-*
+# rules below encode docs/STYLE_GUIDE.md. Run: npm run lint
+extends:
+  - - spectral:oas
+    - all
+functionsDir: spectral/functions
+functions:
+  - postHasIdempotencyKey
+  - listHasPagination
+  - problemOnErrors
+rules:
+  # The spec is a generated contract; examples are documented in prose.
+  oas3-valid-media-example: off
+  oas3-valid-schema-example: off
+  # Tags follow the reading order of the reference, not the alphabet.
+  openapi-tags-alphabetical: off
+
+  improj-https-servers:
+    description: Servers must use https.
+    severity: error
+    given: $.servers[*].url
+    then:
+      function: pattern
+      functionOptions:
+        match: "^https://"
+
+  improj-operation-id-camel-case:
+    description: operationId is lowerCamelCase.
+    severity: error
+    given: $.paths[*][get,put,post,patch,delete].operationId
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][A-Za-z0-9]+$"
+
+  improj-path-kebab-case:
+    description: Path segments are kebab-case; parameters are {snake_case}.
+    severity: error
+    given: $.paths
+    then:
+      field: "@key"
+      function: pattern
+      functionOptions:
+        match: '^(/([a-z0-9]+(-[a-z0-9]+)*|{[a-z][a-z0-9_]*}|[a-z]+.json))+$'
+
+  improj-required-scope:
+    description: Every authenticated operation names exactly one scope (x-required-scope).
+    severity: error
+    given: "$.paths[*][?(@property.match(/^(get|put|post|patch|delete)$/) && @.security && @.security.length > 0)]"
+    then:
+      - field: x-required-scope
+        function: truthy
+      - field: x-required-scope
+        function: enumeration
+        functionOptions:
+          values:
+            - user:read
+            - projects:read
+            - tasks:read
+            - tasks:write
+            - milestones:read
+            - milestones:write
+            - members:read
+            - files:read
+            - files:write
+            - calendar:read
+            - calendar:write
+            - meetings:read
+            - webhooks:manage
+            - agent:read
+            - agent:note
+
+  improj-bearer-only:
+    description: Authenticated operations use the bearerAuth scheme only.
+    severity: error
+    given: $.paths[*][get,put,post,patch,delete].security[*]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          additionalProperties: false
+          properties:
+            bearerAuth: { type: array, maxItems: 0 }
+
+  improj-no-credentials-in-query:
+    description: Credentials never travel in the query string.
+    severity: error
+    given: $.paths[*][*].parameters[?(@.in == 'query')].name
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "/^(access_token|token|api_key|apikey|key|bearer|authorization|secret|password)$/i"
+
+  improj-query-params-snake-case:
+    description: Query parameter names are snake_case.
+    severity: error
+    given: $.paths[*][*].parameters[?(@.in == 'query')].name
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-z0-9_]*$"
+
+  improj-properties-snake-case:
+    description: Component schema properties are snake_case.
+    severity: error
+    given: $.components.schemas[*]..properties
+    then:
+      field: "@key"
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-z0-9_]*$"
+
+  improj-post-idempotency-key:
+    description: Every POST accepts an Idempotency-Key header.
+    severity: error
+    given: $.paths[*].post
+    then:
+      function: postHasIdempotencyKey
+
+  improj-list-pagination:
+    description: A list (data[] + next_cursor) accepts limit and cursor.
+    severity: error
+    given: $.paths[*].get
+    then:
+      function: listHasPagination
+
+  improj-errors-problem-json:
+    description: 4xx and 5xx responses are application/problem+json.
+    severity: error
+    given: $.paths[*][*].responses
+    then:
+      function: problemOnErrors
+
+  improj-ids-positive:
+    description: Integer path ids are positive.
+    severity: warn
+    given: $.paths[*][*].parameters[?(@.in == 'path' && @.schema.type == 'integer')].schema
+    then:
+      field: minimum
+      function: truthy

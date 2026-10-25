@@ -1,0 +1,81 @@
+# GitLab CI for kodvalley/improj-openapi: tests, SAST, dependency scanning,
+# secret detection, a breaking-change check on merge requests, and GitLab Pages.
+# Images are pinned by digest; refresh them deliberately (see CONTRIBUTING.md).
+
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+
+stages: [test, deploy]
+
+variables:
+  NODE_22: "node:22-bookworm-slim@sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d"
+  NODE_24: "node:24-bookworm-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205"
+  GITLEAKS_IMAGE: "zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f"
+  OASDIFF_VERSION: "1.34.1"
+  OASDIFF_SHA256: "75775f65b0adebd26a8e013af51a799342dfdc6262d89efa9e3b7bdf89657d90"
+
+default:
+  interruptible: true
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+test:
+  stage: test
+  image: $NODE_IMAGE
+  parallel:
+    matrix:
+      - NODE_IMAGE: [$NODE_22, $NODE_24]
+  cache:
+    key:
+      files: [package-lock.json]
+    paths: [.npm/]
+  script:
+    - npm ci --ignore-scripts --cache .npm --prefer-offline
+    - npm audit --audit-level=low
+    - npm audit signatures
+    - npm test
+    - npm run docs:build
+
+breaking-changes:
+  stage: test
+  image: $NODE_24
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends git ca-certificates curl > /dev/null
+    - curl -sSfL -o oasdiff.tar.gz "https://github.com/oasdiff/oasdiff/releases/download/v${OASDIFF_VERSION}/oasdiff_${OASDIFF_VERSION}_linux_amd64.tar.gz"
+    - echo "${OASDIFF_SHA256}  oasdiff.tar.gz" | sha256sum --check --strict -
+    - tar -xzf oasdiff.tar.gz -C /usr/local/bin oasdiff
+    - git fetch --quiet origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+    - node scripts/breaking.mjs "origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+
+gitleaks:
+  stage: test
+  image:
+    name: $GITLEAKS_IMAGE
+    entrypoint: [""]
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - gitleaks git --config .gitleaks.toml --redact --no-banner --exit-code 1 .
+
+pages:
+  stage: deploy
+  image: $NODE_24
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - node scripts/build-docs.mjs
+    - rm -rf public && mv site public
+  artifacts:
+    paths: [public]

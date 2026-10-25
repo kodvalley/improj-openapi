@@ -1,0 +1,24 @@
+{
+  "name": "improj-openapi",
+  "version": "2026.10.24",
+  "private": true,
+  "description": "OpenAPI 3.1 description, rendered reference and contract checks for the IMPROJ public API.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "lint": "spectral lint openapi/openapi.json --fail-severity=error",
+    "test:unit": "node --test \"test/*.test.mjs\"",
+    "test": "npm run validate && npm run lint && npm run test:unit",
+    "breaking": "node scripts/breaking.mjs",
+    "docs:build": "node scripts/build-docs.mjs",
+    "docs:serve": "npm run docs:build && node scripts/serve.mjs"
+  },
+  "devDependencies": {
+    "@seriousme/openapi-schema-validator": "2.11.0",
+    "@stoplight/spectral-cli": "6.17.0"
+  }
+}
