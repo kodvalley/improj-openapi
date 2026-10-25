@@ -219,7 +219,7 @@
   function paramsTable(params) {
     const body = h("tbody");
     for (const raw of params) {
-      const p = raw.$ref ? SPEC.components?.parameters?.[raw.$ref.split("/").pop()] ?? {} : raw;
+      const p = component(raw, "parameters");
       const notes = constraints(p.schema);
       const desc = h("td");
       if (p.description) desc.append(prose(p.description));
@@ -238,7 +238,14 @@
     return h("table", { className: "props" }, h("thead", null, h("tr", null, h("th", { text: "Name" }), h("th", { text: "In" }), h("th", { text: "Type" }), h("th", { text: "Notes" }))), body);
   }
 
-  function responseBlock(code, res) {
+  /** Follows a local $ref into components (responses, headers, parameters). */
+  function component(obj, kind) {
+    const m = obj && typeof obj.$ref === "string" ? new RegExp("^#/components/" + kind + "/([^/]+)$").exec(obj.$ref) : null;
+    return m ? SPEC.components?.[kind]?.[m[1]] ?? {} : obj || {};
+  }
+
+  function responseBlock(code, raw) {
+    const res = component(raw, "responses");
     const box = h("div", { className: `response r${String(code)[0]}` });
     box.append(h("h5", null, h("span", { className: "code", text: code }), " ", res.description || ""));
     const headers = Object.keys(res.headers || {});

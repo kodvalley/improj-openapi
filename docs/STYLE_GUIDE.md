@@ -32,7 +32,7 @@ The conventions every IMPROJ API endpoint follows. Rules marked **(lint)** are e
 
 ## 4. Representation
 
-- Field names are `snake_case` **(lint)**.
+- Field names are `snake_case` **(lint)**. The one exception is the Enterprise AI agent routes (`Agent`, `AgentItem` and the note body), which keep the camelCase fields of their earlier API; no new schema may add camelCase fields.
 - Every documented field is always present; absent values are `null`, never omitted. Lists are arrays, possibly empty.
 - Responses are explicit allow-lists; a field is never added to a response because it exists in storage.
 - Request schemas are strict: an unknown field is refused with `400 INVALID_INPUT` and an `errors[]` entry naming it. Server-owned fields (ids, owners, timestamps, file metadata) cannot be sent.
@@ -47,7 +47,7 @@ The conventions every IMPROJ API endpoint follows. Rules marked **(lint)** are e
 
 ## 6. Errors
 
-- Every 4xx and 5xx answer is `application/problem+json` **(lint)** with `type`, `title`, `status`, `detail`, `instance`, `code`, `request_id` and optional `errors: [{ path, message }]`.
+- Every 4xx and 5xx answer is `application/problem+json` **(lint)**, and every operation documents the statuses it can return with their codes with `type`, `title`, `status`, `detail`, `instance`, `code`, `request_id` and optional `errors: [{ path, message }]`.
 - `code` is stable and documented; `detail` is human text that may change. Clients branch on `code`.
 - Reads: any refusal to show a resource is `404 NOT_FOUND`, identical to a missing id.
 - Writes: the target is read first (`404` when unseen); a refusal of the action itself keeps its code (`403 VIEWER_READ_ONLY`, `403 PROJECT_ARCHIVED_READ_ONLY`, ...).

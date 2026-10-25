@@ -41,7 +41,7 @@ test("the improj rules catch broken conventions", async () => {
   delete spec.paths["/projects/{project_id}/milestones"].get["x-required-scope"];
   const meetings = spec.paths["/projects/{project_id}/meetings"].get;
   meetings.parameters = meetings.parameters.filter((p) => p.name !== "cursor");
-  spec.paths["/me"].get.responses["404"].content = { "application/json": { schema: {} } };
+  spec.paths["/me"].get.responses["404"] = { description: "Not found", content: { "application/json": { schema: {} } } };
   spec.paths["/projects/{project_id}/WorkItems"] = spec.paths["/projects/{project_id}/work-packages"];
   spec.components.schemas.Task.properties.dueDate = { type: "string" };
   spec.paths["/me"].get.security = [{ cookieAuth: [] }];

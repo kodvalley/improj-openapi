@@ -106,7 +106,9 @@ rules:
   improj-properties-snake-case:
     description: Component schema properties are snake_case.
     severity: error
-    given: $.components.schemas[*]..properties
+    # Agent and AgentItem keep the camelCase fields of the earlier Enterprise
+    # agent API they document; no other schema may add camelCase fields.
+    given: "$.components.schemas[?(@property != 'Agent' && @property != 'AgentItem')]..properties"
     then:
       field: "@key"
       function: pattern
