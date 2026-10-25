@@ -131,4 +131,12 @@ npm run docs:serve  # reference at http://127.0.0.1:8080/
 npm run breaking    # oasdiff against origin/main (oasdiff on PATH)
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). The files of this repository are licensed under the [MIT License](LICENSE). `info.license` inside `openapi.json` (Proprietary) refers to the IMPROJ service the description documents, not to these files.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+The code and documentation in this repository are released under the [MIT License](LICENSE), copyright Kodvalley.
+
+The `info.license` field of the IMPROJ OpenAPI description (Proprietary, see https://improj.com/terms) covers the IMPROJ service itself, not this repository. Using the API is subject to the IMPROJ terms; using this code is subject to the MIT License.
+
+Contact: info@kodvalley.com. Security reports: see [SECURITY.md](SECURITY.md).

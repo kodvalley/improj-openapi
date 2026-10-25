@@ -20,6 +20,7 @@ The API is versioned by date (`IMPROJ-API-Version`) inside the major path versio
 - Request headers `IMPROJ-API-Version` (version pin) and `X-Request-Id` (your own request id, echoed back).
 - Typed `GET /calendar` (`CalendarItem`) and AI agent routes (`Agent`, `AgentItem`, `AgentNote`); `GET /agents/{agent_id}/items` also answers a signed `next_cursor` (preferred) next to the earlier numeric `nextCursor`.
 - Webhook headers `IMPROJ-Webhook-Id` and `IMPROJ-API-Version`, and the `ping` event.
+- `info.contact` with the Kodvalley contact address (info@kodvalley.com) in this copy of the description.
 - Tag and parameter descriptions, enums for webhook events, `format: uri` and an `https://` pattern for webhook URLs, and real integer bounds.
 
 ### Note on the breaking-change baseline

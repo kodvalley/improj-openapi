@@ -1,6 +1,6 @@
 # Contributing to IMPROJ OpenAPI
 
-Thank you for helping. This project follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+Thank you for helping. This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). Questions about contributing, conduct reports and security reports all go to **info@kodvalley.com** (security reports privately, see below).
 
 ## Security first
 
