@@ -19,6 +19,6 @@
   },
   "devDependencies": {
     "@seriousme/openapi-schema-validator": "2.11.0",
-    "@stoplight/spectral-cli": "6.17.0"
+    "@stoplight/spectral-cli": "6.17.1"
   }
 }
