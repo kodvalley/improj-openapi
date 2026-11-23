@@ -18,7 +18,7 @@
     "docs:serve": "npm run docs:build && node scripts/serve.mjs"
   },
   "devDependencies": {
-    "@seriousme/openapi-schema-validator": "2.11.0",
-    "@stoplight/spectral-cli": "6.17.0"
+    "@seriousme/openapi-schema-validator": "2.12.0",
+    "@stoplight/spectral-cli": "6.17.1"
   }
 }
